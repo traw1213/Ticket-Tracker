@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Work Logs</title>
+    <style>
+        /* Style the table for displaying daily logs */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        table, th, td {
+            border: 1px solid black;
+        }
+        th, td {
+            padding: 10px;
+            text-align: center;
+        }
+        .filter-buttons {
+            margin-bottom: 20px;
+        }
+        .filter-buttons button {
+            margin-right: 10px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Daily Work Logs</h1>
+
+    <h2>Rolling Averages</h2>
+    <!-- Display the rolling averages for tickets completed, TPH, and travel time -->
+    <p>Rolling Tickets Completed Average: {{ rolling_tickets }}</p>
+    <p>Rolling TPH Average: {{ rolling_tph }}</p>
+    <p>Rolling Travel Time Average: {{ rolling_travel_time|timedelta }}</p>
+
+    <h2>Filter Logs by Time Frame</h2>
+    <!-- Buttons to filter logs by different time frames -->
+    <div class="filter-buttons">
+        <form method="get" action="{{ url_for('logs') }}">
+            <button type="submit" name="time_frame" value="all" {% if time_frame == 'all' %}disabled{% endif %}>All</button>
+            <button type="submit" name="time_frame" value="weekly" {% if time_frame == 'weekly' %}disabled{% endif %}>Last 7 Days</button>
+            <button type="submit" name="time_frame" value="monthly" {% if time_frame == 'monthly' %}disabled{% endif %}>Last 30 Days</button>
+            <button type="submit" name="time_frame" value="3_months" {% if time_frame == '3_months' %}disabled{% endif %}>Last 3 Months</button>
+            <button type="submit" name="time_frame" value="6_months" {% if time_frame == '6_months' %}disabled{% endif %}>Last 6 Months</button>
+            <button type="submit" name="time_frame" value="yearly" {% if time_frame == 'yearly' %}disabled{% endif %}>Last Year</button>
+        </form>
+    </div>
+
+    <h2>Daily Logs</h2>
+    <!-- Display the daily logs in a table format -->
+    <table>
+        <thead>
+            <tr>
+                <th>Date</th>
+                <th>Tickets Completed</th>
+                <th>Total Work Time (HH:MM:SS)</th>
+                <th>Total Travel Time (HH:MM:SS)</th>
+                <th>TPH</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for log in daily_logs %}
+            <tr>
+                <td>{{ log.date }}</td>
+                <td>{{ log.tickets_completed }}</td>
+                <td>{{ log.total_work_time|timedelta }}</td>
+                <td>{{ log.total_travel_time|timedelta }}</td>
+                <td>{{ log.tph }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <!-- Link to navigate back to the main page -->
+    <a href="{{ url_for('index') }}">Back to Ticket Tracker</a>
+</body>
+</html>
