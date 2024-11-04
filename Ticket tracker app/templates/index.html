@@ -1,0 +1,136 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ticket Tracker</title>
+    <style>
+        /* Style for displaying tickets per hour */
+        #tph-display {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            font-size: 24px;
+            font-weight: bold;
+            background-color: #f0f0f0;
+            padding: 10px;
+            border: 2px solid #000;
+        }
+        /* Style for displaying work timer */
+        #work-timer-display {
+            position: fixed;
+            bottom: 80px;
+            right: 20px;
+            font-size: 20px;
+            font-weight: bold;
+            background-color: #d0f0d0;
+            padding: 10px;
+            border: 2px solid #000;
+        }
+        /* Style for displaying travel timer */
+        #travel-timer-display {
+            position: fixed;
+            bottom: 140px;
+            right: 20px;
+            font-size: 20px;
+            font-weight: bold;
+            background-color: #f0d0d0;
+            padding: 10px;
+            border: 2px solid #000;
+        }
+    </style>
+    <script>
+        // Function to refresh tickets per hour (TPH) dynamically
+        function refreshTPH() {
+            fetch('/get_tph')
+                .then(response => response.json())
+                .then(data => {
+                    document.getElementById('tph-display').innerText = `Tickets Per Hour: ${data.tickets_per_hour_live.toFixed(2)}`;
+                });
+        }
+    </script>
+</head>
+<body>
+    <h1>Ticket Tracker</h1>
+
+    {% with messages = get_flashed_messages() %}
+    {% if messages %}
+    <ul class="flashes">
+        <!-- Display any flash messages from the server -->
+        {% for message in messages %}
+        <script>alert("{{ message }}");</script>
+        {% endfor %}
+    </ul>
+    {% endif %}
+    {% endwith %}
+
+    <h2>Work Session Controls</h2>
+    <!-- Form to control work session actions (start, end, meal breaks) -->
+    <form method="post" action="/">
+        <button type="submit" name="action" value="start_work" {% if work_timer['start_time'] %}disabled{% endif %}>Start Work</button>
+        <button type="submit" name="action" value="end_work" {% if not work_timer['start_time'] or work_timer['paused_time'] %}disabled{% endif %}>End Work</button>
+        <button type="submit" name="action" value="start_meal" {% if not work_timer['start_time'] or work_timer['paused_time'] %}disabled{% endif %}>Start Meal</button>
+        <button type="submit" name="action" value="end_meal" {% if not work_timer['paused_time'] %}style="display:none"{% endif %}>End Meal</button>
+    </form>
+
+    <h2>Add a Ticket</h2>
+    <!-- Form to add a new ticket -->
+    <form method="post" action="/" onsubmit="setTimeout(refreshTPH, 500);">
+        <input type="hidden" name="action" value="add_ticket">
+        <label for="ticket_description">Ticket Description:</label><br>
+        <input type="text" id="ticket_description" name="ticket_description" required><br><br>
+        <input type="submit" value="Add Ticket">
+    </form>
+    
+    <h2>All Tickets</h2>
+    <!-- List of all tickets with control buttons for each ticket -->
+    <ul>
+        {% for ticket in tickets %}
+        <li>
+            <strong>{{ ticket.description }}</strong><br>
+            Created at: {{ ticket.timestamp }}<br>
+            Arrival Time: {{ ticket.arrival_time if ticket.arrival_time else 'Not arrived yet' }}<br>
+            Completion Time: {{ ticket.completion_time if ticket.completion_time != 'Cancelled' else 'Cancelled' }}<br>
+            Time Spent: {{ ticket | calculate_duration }}<br><br>
+            <form method="post" action="/" onsubmit="setTimeout(refreshTPH, 500);">
+                <input type="hidden" name="ticket_id" value="{{ ticket.id }}">
+                <button type="submit" name="action" value="complete" {% if ticket.completion_time or not work_timer['start_time'] %}disabled{% endif %}>Complete Ticket</button>
+                <button type="submit" name="action" value="cancel" {% if ticket.completion_time or not work_timer['start_time'] %}disabled{% endif %}>Cancel Ticket</button>
+                <button type="submit" name="action" value="delete">Delete Ticket</button>
+            </form>
+        </li>
+        {% endfor %}
+    </ul>
+
+    <h2>Work Sessions Log</h2>
+    <!-- List of all work session actions -->
+    <ul>
+        {% for session in work_sessions %}
+        <li>{{ session.action.replace('_', ' ').title() }} at {{ session.timestamp }}</li>
+        {% endfor %}
+    </ul>
+
+    <!-- Display the current work timer duration -->
+    <div id="work-timer-display">
+        Current Work Time: {{ current_timer_duration }}
+    </div>
+
+    <!-- Display tickets per hour -->
+    <div id="tph-display">
+        Tickets Per Hour: {{ tickets_per_hour_live|round(2) }}
+    </div>
+
+    <!-- Display the current travel time duration -->
+    <div id="travel-timer-display">
+        Current Travel Time: {{ current_travel_duration }}
+    </div>
+
+    <!-- Link to view detailed logs -->
+    <a href="{{ url_for('logs') }}">View Logs</a>
+
+    <script>
+        // Initial fetch to load the TPH when the page loads
+        refreshTPH();
+    </script>
+</body>
+</html>
