@@ -1,0 +1,23 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8"> <!-- Defines the character encoding for the document as UTF-8 -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"> <!-- Makes the webpage responsive, adjusting to different screen sizes -->
+    <title>Confirm Action</title> <!-- Title of the webpage displayed in the browser tab -->
+</head>
+<body>
+    <h2>This ticket already exists. Do you want to work on it again?</h2> <!-- Prompt message for the user to confirm if they want to work on an existing ticket -->
+
+    <!-- Form to confirm whether the user wants to work on an existing ticket -->
+    <form method="post" action="/confirm">
+        <!-- Hidden input to pass the ticket description along with the form submission -->
+        <input type="hidden" name="ticket_description" value="{{ ticket_description }}">
+        
+        <!-- Button for confirming to work on the existing ticket -->
+        <button type="submit" name="confirm_work" value="yes">Yes</button>
+        
+        <!-- Button for declining to work on the existing ticket -->
+        <button type="submit" name="confirm_work" value="no">No</button>
+    </form>
+</body>
+</html>
